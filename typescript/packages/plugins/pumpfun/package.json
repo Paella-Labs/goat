@@ -1,0 +1,26 @@
+{
+  "name": "@goat-sdk/plugin-pumpfun",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest",
+    "lint": "biome check src"
+  },
+  "dependencies": {
+    "@goat-sdk/core": "workspace:*",
+    "@solana/web3.js": "1.95.8",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "tsup": "8.3.5",
+    "typescript": "5.6.3",
+    "vitest": "2.1.5"
+  },
+  "peerDependencies": {
+    "@goat-sdk/core": "workspace:*"
+  }
+}
