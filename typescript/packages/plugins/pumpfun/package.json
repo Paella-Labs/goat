@@ -25,6 +25,7 @@
         "@goat-sdk/core": "workspace:*"
     },
     "devDependencies": {
+        "@solana/spl-token": "0.4.9",
         "@types/node": "22.10.2",
         "ts-node": "10.9.2",
         "tsup": "8.3.5",
