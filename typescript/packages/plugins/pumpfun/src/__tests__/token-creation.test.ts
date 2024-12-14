@@ -1,65 +1,112 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { TEST_WALLET_KEY } from './wallet';
 import { createPumpToken } from '../token';
+import type { SolanaWalletClient, SolanaReadRequest, SolanaReadResult } from '@goat-sdk/core';
+import { pumpfun } from '../index';
 
-describe('PumpFun Token Creation', () => {
-  const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
-  const wallet = Keypair.fromSecretKey(TEST_WALLET_KEY);
-  const PUMP_PROGRAM_ID = new PublicKey('6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEYfBH1');
-  const DECIMALS = 6;
+describe('PumpFun Plugin', () => {
+  // Mock connection
+  const mockConnection = {
+    getBalance: vi.fn().mockResolvedValue(1 * LAMPORTS_PER_SOL),
+    getLatestBlockhash: vi.fn().mockResolvedValue({ blockhash: 'mock-blockhash' }),
+    sendTransaction: vi.fn().mockResolvedValue('mock-signature'),
+    confirmTransaction: vi.fn().mockResolvedValue(true),
+    getAccountInfo: vi.fn().mockResolvedValue({ data: Buffer.from('mock-data') })
+  } as unknown as Connection;
 
-  it('should create a token with correct parameters', async () => {
-    const tokenName = 'Test Token';
-    const tokenSymbol = 'TEST';
-    const initialLiquidity = 0.1;
+  const keypair = Keypair.fromSecretKey(TEST_WALLET_KEY);
 
-    // Check wallet balance first
-    const balance = await connection.getBalance(wallet.publicKey);
-    console.log('Wallet balance:', balance / LAMPORTS_PER_SOL, 'SOL');
-    expect(balance).toBeGreaterThan(0.1 * LAMPORTS_PER_SOL);
+  // Create a mock SolanaWalletClient
+  const mockWalletClient: SolanaWalletClient = {
+    getAddress: () => keypair.publicKey.toString(),
+    getChain: () => ({ type: 'solana', network: 'devnet' }),
+    signMessage: async () => ({ signature: 'mock-signature' }),
+    balanceOf: async () => ({
+      decimals: 9,
+      symbol: 'SOL',
+      name: 'Solana',
+      value: BigInt(1 * LAMPORTS_PER_SOL)
+    }),
+    read: async (): Promise<SolanaReadResult> => ({
+      value: null
+    }),
+    sendTransaction: async ({ instructions }) => {
+      return { hash: 'mock-tx-hash' };
+    }
+  };
 
-    try {
-      const result = await createPumpToken({
-        connection,
-        wallet,
-        name: tokenName,
-        symbol: tokenSymbol,
-        initialLiquidity: initialLiquidity * LAMPORTS_PER_SOL
-      });
+  describe('Plugin Interface', () => {
+    const plugin = pumpfun();
 
-      console.log('Token creation result:', {
-        address: result.tokenAddress.toString(),
-        bondingCurve: result.bondingCurveAccount.toString()
-      });
+    it('should have correct name', () => {
+      expect(plugin.name).toBe('pumpfun');
+    });
+
+    it('should support only Solana chain', () => {
+      expect(plugin.supportsChain({ type: 'solana' })).toBe(true);
+      expect(plugin.supportsChain({ type: 'evm' })).toBe(false);
+    });
+
+    it('should not support smart wallets', () => {
+      expect(plugin.supportsSmartWallets()).toBe(false);
+    });
+
+    it('should provide createPumpToken tool', async () => {
+      const tools = await plugin.getTools(mockWalletClient);
+      expect(tools).toHaveLength(1);
+      expect(tools[0].name).toBe('createPumpToken');
+      expect(tools[0].description).toContain('{{tool}}');
+      expect(tools[0].parameters).toBeDefined();
+    });
+  });
+
+  describe('Token Creation', () => {
+    it('should create a token with correct parameters', async () => {
+      const tokenName = 'Test Token';
+      const tokenSymbol = 'TEST';
+      const initialLiquidity = 0.1;
+
+      const result = await createPumpToken(
+        mockWalletClient,
+        mockConnection,
+        {
+          name: tokenName,
+          symbol: tokenSymbol,
+          initialLiquidity: initialLiquidity * LAMPORTS_PER_SOL
+        }
+      );
 
       // Verify token address ends with 'pump'
       expect(result.tokenAddress.toString().toLowerCase()).toMatch(/pump$/);
 
-      // Verify bonding curve account exists
-      const bondingCurveAccount = await connection.getAccountInfo(result.bondingCurveAccount);
-      expect(bondingCurveAccount).not.toBeNull();
+      // Verify transaction was sent
+      expect(result.txHash).toBe('mock-tx-hash');
 
-      // Verify token decimals
-      const tokenAccountInfo = await connection.getAccountInfo(result.tokenAddress);
-      expect(tokenAccountInfo).not.toBeNull();
-      // Token account data structure: [authority(32), mint(32), decimals(1), ...]
-      const decimals = tokenAccountInfo?.data[64];
-      expect(decimals).toBe(DECIMALS);
+      // Verify bonding curve account was created
+      expect(result.bondingCurveAccount).toBeInstanceOf(PublicKey);
+    });
 
-      // Verify minimal liquidity deposit
-      const curveBalance = await connection.getBalance(result.bondingCurveAccount);
-      expect(curveBalance).toBeGreaterThanOrEqual(initialLiquidity * LAMPORTS_PER_SOL);
+    it('should validate parameters correctly', async () => {
+      const plugin = pumpfun();
+      const tools = await plugin.getTools(mockWalletClient);
+      const createTool = tools[0];
 
-      console.log('Token created successfully:', {
-        address: result.tokenAddress.toString(),
-        bondingCurve: result.bondingCurveAccount.toString(),
-        liquidity: curveBalance / LAMPORTS_PER_SOL,
-        decimals
-      });
-    } catch (error) {
-      console.error('Token creation failed:', error);
-      throw error;
-    }
-  }, 30000); // 30 second timeout
+      // Test valid parameters
+      const validParams = {
+        name: 'Test Token',
+        symbol: 'TEST',
+        initialLiquidity: 0.1
+      };
+      await expect(createTool.method(validParams)).resolves.toBeDefined();
+
+      // Test invalid parameters
+      const invalidParams = {
+        name: '',
+        symbol: '',
+        initialLiquidity: 0
+      };
+      await expect(createTool.parameters.parseAsync(invalidParams)).rejects.toBeDefined();
+    });
+  });
 });

@@ -1,4 +1,5 @@
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import type { SolanaWalletClient } from '@goat-sdk/core';
 
 // Pump.fun program ID on Solana
 const PUMP_FUN_PROGRAM_ID = new PublicKey('6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEYfBH1');
@@ -6,21 +7,25 @@ const PUMP_FUN_PROGRAM_ID = new PublicKey('6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5u
 // Token decimals must be 6 for pump.fun tokens
 const TOKEN_DECIMALS = 6;
 
-interface CreatePumpTokenParams {
-  connection: Connection;
-  wallet: Keypair;
+export interface CreatePumpTokenParams {
   name: string;
   symbol: string;
   initialLiquidity: number;
 }
 
-interface CreatePumpTokenResult {
+export interface CreatePumpTokenResult {
   tokenAddress: PublicKey;
   bondingCurveAccount: PublicKey;
+  txHash: string;
 }
 
-export async function createPumpToken(params: CreatePumpTokenParams): Promise<CreatePumpTokenResult> {
-  const { connection, wallet, name, symbol, initialLiquidity } = params;
+export async function createPumpToken(
+  walletClient: SolanaWalletClient,
+  connection: Connection,
+  params: CreatePumpTokenParams
+): Promise<CreatePumpTokenResult> {
+  const { name, symbol, initialLiquidity } = params;
+  const walletAddress = walletClient.getAddress();
 
   // Generate mint keypair that ends with 'pump'
   let mintKeypair: Keypair;
@@ -35,20 +40,20 @@ export async function createPumpToken(params: CreatePumpTokenParams): Promise<Cr
   );
 
   // Create transaction for initial liquidity deposit
-  const tx = new Transaction().add(
-    SystemProgram.transfer({
-      fromPubkey: wallet.publicKey,
-      toPubkey: bondingCurveAccount,
-      lamports: initialLiquidity,
-    })
-  );
+  const transferInstruction = SystemProgram.transfer({
+    fromPubkey: new PublicKey(walletAddress),
+    toPubkey: bondingCurveAccount,
+    lamports: initialLiquidity,
+  });
 
-  // Send and confirm transaction
-  const signature = await connection.sendTransaction(tx, [wallet]);
-  await connection.confirmTransaction(signature, 'confirmed');
+  // Send transaction using wallet client
+  const txResult = await walletClient.sendTransaction({
+    instructions: [transferInstruction],
+  });
 
   return {
     tokenAddress: mintKeypair.publicKey,
     bondingCurveAccount,
+    txHash: txResult.hash,
   };
 }
