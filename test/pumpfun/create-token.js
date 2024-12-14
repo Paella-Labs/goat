@@ -11,12 +11,11 @@ async function createMinimalPumpToken() {
     // Total: ~0.123 SOL
 
     const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-    const wallet = Keypair.generate();
-    console.log('Wallet address for funding:', wallet.publicKey.toString());
 
-    // Save private key for later use after funding
-    console.log('Please save this private key securely (for testing only):');
-    console.log(JSON.stringify(Array.from(wallet.secretKey)));
+    // Use the funded wallet's private key
+    const privateKey = [192,243,211,108,49,79,123,157,251,126,76,89,231,212,45,227,29,126,253,50,20,13,153,159,84,202,227,101,191,110,31,182,124,94,156,65,86,251,159,0,63,3,80,146,73,64,79,210,51,246,197,126,224,37,149,240,98,2,60,41,233,168,238,66];
+    const wallet = Keypair.fromSecretKey(new Uint8Array(privateKey));
+    console.log('Checking wallet:', wallet.publicKey.toString());
 
     // Check wallet balance
     const balance = await connection.getBalance(wallet.publicKey);
