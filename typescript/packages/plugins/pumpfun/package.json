@@ -19,6 +19,7 @@
         "@goat-sdk/core": "workspace:*",
         "@metaplex-foundation/mpl-token-metadata": "3.3.0",
         "@solana/web3.js": "catalog:",
+        "tweetnacl": "^1.0.3",
         "zod": "catalog:"
     },
     "peerDependencies": {
