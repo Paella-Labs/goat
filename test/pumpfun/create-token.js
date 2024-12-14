@@ -1,5 +1,5 @@
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { createMint } from '@solana/spl-token';
 
 const PUMP_PROGRAM = new PublicKey('6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEYfBH1');
 
