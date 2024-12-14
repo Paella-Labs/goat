@@ -1,0 +1,19 @@
+{
+    "name": "@goat-sdk/example-pump-fun",
+    "private": true,
+    "scripts": {
+        "start": "tsx index.ts"
+    },
+    "dependencies": {
+        "@ai-sdk/openai": "workspace:*",
+        "@goat-sdk/adapter-vercel-ai": "workspace:*",
+        "@goat-sdk/core": "workspace:*",
+        "@goat-sdk/plugin-pump-fun": "workspace:*",
+        "@goat-sdk/wallet-solana": "workspace:*",
+        "@solana/web3.js": "^1.87.6",
+        "@types/node": "^20.10.2",
+        "ai": "workspace:*",
+        "dotenv": "^16.3.1",
+        "tsx": "^4.6.2"
+    }
+}
