@@ -18,6 +18,8 @@
     "dependencies": {
         "@goat-sdk/core": "workspace:*",
         "@metaplex-foundation/mpl-token-metadata": "3.3.0",
+        "@metaplex-foundation/umi": "^0.9.2",
+        "@metaplex-foundation/umi-bundle-defaults": "0.9.2",
         "@solana/web3.js": "catalog:",
         "tweetnacl": "^1.0.3",
         "zod": "catalog:"
