@@ -29,10 +29,14 @@
   "dependencies": {
     "@goat-sdk/core": "workspace:*",
     "@mysten/sui.js": "^0.50.1",
-    "viem": "^2.7.8",
-    "zod": "^3.22.4"
+    "@mysten/sui.js/cryptography": "^0.50.1",
+    "viem": "^2.7.8"
+  },
+  "peerDependencies": {
+    "zod": "^3.0.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   }

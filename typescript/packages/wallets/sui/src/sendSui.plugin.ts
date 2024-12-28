@@ -1,24 +1,38 @@
-import { z } from "zod";
-import { Chain, PluginBase, createTool, Tool } from "@goat-sdk/core";
+import { Chain, PluginBase, createTool } from "@goat-sdk/core";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import type { SuiWalletClient } from "./SuiWalletClient";
+import { z } from "zod";
+import { SuiWalletClient } from "./SuiWalletClient";
+
+export class SendSUIPlugin extends PluginBase<SuiWalletClient> {
+    constructor() {
+        super("sendSUI", []);
+    }
+
+    supportsChain = (chain: Chain) => chain.type === "sui";
+
+    getTools(walletClient: SuiWalletClient) {
+        const sendTool = createTool(
+            {
+                name: "send_sui",
+                description: "Send SUI to an address",
+                parameters: sendSUIParametersSchema,
+            },
+            (parameters) => sendSUIMethod(walletClient, parameters),
+        );
+        return [sendTool];
+    }
+}
 
 const sendSUIParametersSchema = z.object({
-    recipient: z.string().describe("The recipient's address"),
-    amount: z.string().describe("The amount of SUI to send (in decimals)"),
-}) as z.ZodType<{
-    recipient: string;
-    amount: string;
-}>;
+    to: z.string().describe("The address to send SUI to"),
+    amount: z.string().describe("The amount of SUI to send"),
+});
 
-async function sendSUIMethod(
-    walletClient: SuiWalletClient,
-    parameters: z.infer<typeof sendSUIParametersSchema>,
-): Promise<{ hash: string; digest?: string }> {
+async function sendSUIMethod(walletClient: SuiWalletClient, parameters: z.infer<typeof sendSUIParametersSchema>) {
     try {
         const tx = new TransactionBlock();
         const [coin] = tx.splitCoins(tx.gas, [tx.pure(parameters.amount)]);
-        tx.transferObjects([coin], tx.pure(parameters.recipient));
+        tx.transferObjects([coin], tx.pure(parameters.to));
 
         const response = await walletClient.sendTransaction({
             transaction: tx,
@@ -30,30 +44,6 @@ async function sendSUIMethod(
         };
     } catch (error) {
         throw new Error(`Failed to send SUI: ${error}`);
-    }
-}
-
-export class SendSUIPlugin extends PluginBase<SuiWalletClient> {
-    constructor() {
-        super("sendSUI", []);
-    }
-
-    supportsChain(chain: Chain) {
-        return chain.type === "sui";
-    }
-
-    getTools(walletClient: SuiWalletClient): ReturnType<typeof createTool>[] {
-        const sendTool = createTool(
-            {
-                name: "send_sui",
-                description: "Send SUI to an address",
-                parameters: sendSUIParametersSchema,
-            },
-            (parameters: z.infer<typeof sendSUIParametersSchema>) =>
-                sendSUIMethod(walletClient, parameters),
-        );
-
-        return [sendTool];
     }
 }
 
