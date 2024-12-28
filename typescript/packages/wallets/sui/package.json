@@ -1,0 +1,39 @@
+{
+  "name": "@goat-sdk/wallets-sui",
+  "version": "0.0.1",
+  "description": "Sui wallet implementation for GOAT SDK",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rimraf .turbo node_modules dist"
+  },
+  "keywords": [
+    "goat-sdk",
+    "sui",
+    "blockchain",
+    "wallet"
+  ],
+  "author": "GOAT SDK Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "@goat-sdk/core": "workspace:*",
+    "@mysten/sui.js": "^0.50.1",
+    "viem": "^2.7.8",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}
