@@ -10,17 +10,33 @@ import {
 } from "./parameters";
 
 export class CoinGeckoService {
-    private readonly baseUrl = "https://api.coingecko.com/api/v3";
-    constructor(private readonly apiKey: string) {}
+    private readonly baseUrl: string;
+
+    constructor(
+        private readonly apiKey: string,
+        private readonly usePro: boolean = false,
+    ) {
+        this.baseUrl = usePro ? "https://pro-api.coingecko.com/api/v3" : "https://api.coingecko.com/api/v3";
+    }
+
+    private appendOptionalBooleanParam(params: URLSearchParams, key: string, value?: boolean) {
+        if (value) {
+            params.append(key, "true");
+        }
+    }
 
     private async fetchWithKey(endpoint: string, params?: URLSearchParams) {
         const url = new URL(`${this.baseUrl}${endpoint}`);
         if (params) {
             url.search = params.toString();
         }
-        url.searchParams.append("x_cg_demo_api_key", this.apiKey);
 
-        const response = await fetch(url.toString());
+        const headers: Record<string, string> = {};
+        headers[this.usePro ? "x-cg-pro-api-key" : "x-cg-demo-api-key"] = this.apiKey;
+
+        const response = await fetch(url.toString(), {
+            headers,
+        });
         if (!response.ok) {
             throw new Error(`CoinGecko API error: ${response.status} - ${await response.text()}`);
         }
@@ -53,18 +69,10 @@ export class CoinGeckoService {
             vs_currencies: parameters.vs_currencies,
         });
 
-        if (parameters.include_market_cap) {
-            params.append("include_market_cap", "true");
-        }
-        if (parameters.include_24hr_vol) {
-            params.append("include_24hr_vol", "true");
-        }
-        if (parameters.include_24hr_change) {
-            params.append("include_24hr_change", "true");
-        }
-        if (parameters.include_last_updated_at) {
-            params.append("include_last_updated_at", "true");
-        }
+        this.appendOptionalBooleanParam(params, "include_market_cap", parameters.include_market_cap);
+        this.appendOptionalBooleanParam(params, "include_24hr_vol", parameters.include_24hr_vol);
+        this.appendOptionalBooleanParam(params, "include_24hr_change", parameters.include_24hr_change);
+        this.appendOptionalBooleanParam(params, "include_last_updated_at", parameters.include_last_updated_at);
         if (parameters.precision) {
             params.append("precision", parameters.precision.toString());
         }
@@ -112,11 +120,11 @@ export class CoinGeckoService {
         const params = new URLSearchParams({
             ids: parameters.ids,
             vs_currencies: parameters.vs_currencies,
-            include_market_cap: parameters.include_market_cap.toString(),
-            include_24hr_vol: parameters.include_24hr_vol.toString(),
-            include_24hr_change: parameters.include_24hr_change.toString(),
-            include_last_updated_at: parameters.include_last_updated_at.toString(),
         });
+        this.appendOptionalBooleanParam(params, "include_market_cap", parameters.include_market_cap);
+        this.appendOptionalBooleanParam(params, "include_24hr_vol", parameters.include_24hr_vol);
+        this.appendOptionalBooleanParam(params, "include_24hr_change", parameters.include_24hr_change);
+        this.appendOptionalBooleanParam(params, "include_last_updated_at", parameters.include_last_updated_at);
         return this.fetchWithKey("/simple/price", params);
     }
 }
