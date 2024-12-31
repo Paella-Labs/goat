@@ -1,7 +1,7 @@
 import { WalletClientBase } from "@goat-sdk/core";
 import type { SuiClient } from "@mysten/sui.js/client";
 import { formatUnits } from "viem";
-import type { SuiTransaction, SuiTransactionResponse, SuiQuery, SuiQueryResponse } from "./types";
+import type { SuiQuery, SuiQueryResponse, SuiTransaction, SuiTransactionResponse } from "./types";
 
 export type SuiWalletClientCtorParams = {
     client: SuiClient;

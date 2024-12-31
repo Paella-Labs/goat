@@ -1,4 +1,4 @@
-import { Chain, PluginBase, createTool } from "@goat-sdk/core";
+import { Chain, PluginBase, ToolBase, createTool } from "@goat-sdk/core";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { z } from "zod";
 import { SuiWalletClient } from "./SuiWalletClient";
@@ -10,14 +10,14 @@ export class SendSUIPlugin extends PluginBase<SuiWalletClient> {
 
     supportsChain = (chain: Chain) => chain.type === "sui";
 
-    getTools(walletClient: SuiWalletClient) {
+    getTools(walletClient: SuiWalletClient): ToolBase[] {
         const sendTool = createTool(
             {
                 name: "send_sui",
                 description: "Send SUI to an address",
                 parameters: sendSUIParametersSchema,
             },
-            (parameters) => sendSUIMethod(walletClient, parameters),
+            async (parameters) => sendSUIMethod(walletClient, parameters),
         );
         return [sendTool];
     }
@@ -40,7 +40,6 @@ async function sendSUIMethod(walletClient: SuiWalletClient, parameters: z.infer<
 
         return {
             hash: response.hash,
-            digest: response.digest,
         };
     } catch (error) {
         throw new Error(`Failed to send SUI: ${error}`);
