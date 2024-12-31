@@ -64,10 +64,10 @@ export class CoinGeckoService {
         description: "Search for coins on CoinGecko",
     })
     async searchCoins(parameters: SearchCoinsParameters) {
-        const { query, exact_match } = parameters;
+        const { query, exactMatch } = parameters;
         const params = new URLSearchParams({
             query,
-            ...(exact_match && { exact_match: exact_match.toString() }),
+            ...(exactMatch && { exact_match: exactMatch.toString() }),
         });
         return this.fetchWithKey("/search", params);
     }

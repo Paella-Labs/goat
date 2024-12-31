@@ -36,7 +36,7 @@ export class GetCoinPriceParameters extends createToolParameters(
 export class SearchCoinsParameters extends createToolParameters(
     z.object({
         query: z.string().describe("The search query to find coins (e.g., 'bitcoin' or 'btc')"),
-        exact_match: z.boolean().optional().default(false).describe("Only return exact matches for the search query"),
+        exactMatch: z.boolean().optional().default(false).describe("Only return exact matches for the search query"),
     })
 ) {}
 
