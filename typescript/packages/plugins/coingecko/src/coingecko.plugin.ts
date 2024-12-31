@@ -3,11 +3,12 @@ import { CoinGeckoService } from "./coingecko.service";
 
 interface CoingeckoPluginOptions {
     apiKey: string;
+    usePro?: boolean;
 }
 
 export class CoinGeckoPlugin extends PluginBase {
-    constructor({ apiKey }: CoingeckoPluginOptions) {
-        super("coingecko", [new CoinGeckoService(apiKey)]);
+    constructor({ apiKey, usePro = false }: CoingeckoPluginOptions) {
+        super("coingecko", [new CoinGeckoService(apiKey, usePro)]);
     }
 
     supportsChain = () => true;
