@@ -23,7 +23,10 @@ export class SendSUIPlugin extends PluginBase<SuiWalletClient> {
     }
 }
 
-const sendSUIParametersSchema = z.object({
+const sendSUIParametersSchema: z.ZodType<{
+    to: string;
+    amount: string;
+}> = z.object({
     to: z.string().describe("The address to send SUI to"),
     amount: z.string().describe("The amount of SUI to send"),
 });
